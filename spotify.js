@@ -14,6 +14,9 @@ var spotifyApi = new SpotifyWebApi(credentials);
 let tokens; 
 
 function saveTokens(){
+    if (!fs.existsSync("./auth/")) {
+        fs.mkdirSync("./auth/");
+    }    
     fs.writeFileSync('./auth/tokens.json', JSON.stringify(tokens));
 }
 function loadTokens(){
@@ -29,6 +32,7 @@ loadTokens();
 // The code that's returned as a query parameter to the redirect URI
 // Retrieve an access token and a refresh token
 function Authenticate(code){
+    const spotifyAuthURL = `https://accounts.spotify.com/authorize?client_id=${config.SPOTIFY_CLIENT_ID}&response_type=code&redirect_uri=${encodeURI(config.SPOTIFY_REDIRECT_URL)}&scope=playlist-read-collaborative%20playlist-modify-public%20playlist-read-private%20playlist-modify-private`
     if(tokens.refresh != ""){
         spotifyApi.setAccessToken(tokens.access);
         spotifyApi.setRefreshToken(tokens.refresh);
@@ -37,7 +41,6 @@ function Authenticate(code){
         return;
     }
     if(!code || code == ""){
-        const spotifyAuthURL = `https://accounts.spotify.com/authorize?client_id=${config.SPOTIFY_CLIENT_ID}&response_type=code&redirect_uri=${encodeURI(config.SPOTIFY_REDIRECT_URL)}&scope=playlist-read-collaborative%20playlist-modify-public%20playlist-read-private%20playlist-modify-private`
         console.log("Spotify client credential not found! To get this, click this link and fill out SPOTIFY_CLIENT_CREDENTIAL with the part that's returned as ?code=XXXXXX");
         console.log(spotifyAuthURL);
         process.exit(9);
@@ -56,6 +59,9 @@ function Authenticate(code){
         },
             function(err) {
                 console.log('Something went wrong!', err);
+                console.log("Try grabbing a new client credential:");
+                console.log(spotifyAuthURL);        
+                process.exit(9);
             }
         );
   }

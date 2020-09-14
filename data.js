@@ -8,8 +8,12 @@ if(fs.existsSync('./data/data.json')){
     parsedData = {"events":[]};
     saveData();
 }
+
 function saveData(){
     const data = JSON.stringify(parsedData);
+    if (!fs.existsSync("./data/")) {
+        fs.mkdirSync("./data/");
+    }    
     fs.writeFileSync('./data/data.json', data);
 }
 
