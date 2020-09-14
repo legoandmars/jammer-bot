@@ -117,3 +117,6 @@ dist
 
 # tokens
 **/tokens.json
+
+# data
+**/data.json
