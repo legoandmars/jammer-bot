@@ -61,7 +61,7 @@ client.once('ready', () => {
     console.log('Ready!');
     client.on('message', message => {
         if(message.author.bot) return;
-        if(config.IS_LOCKED_TO_CHANNEL && LOCK_CHANNEL && message.channel.id.toString() != LOCK_CHANNEL) return;
+        if(config.IS_LOCKED_TO_CHANNEL && config.LOCK_CHANNEL && message.channel.id.toString() != config.LOCK_CHANNEL) return;
         const spotifyIDs = parseSpotifyURLSFromString(message.content);
         if(spotifyIDs.length > 0){
             spotify.AddToPlaylist(spotifyIDs).then(() => {
