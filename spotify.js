@@ -82,7 +82,7 @@ function refreshAuth(){
 
 function AddToPlaylist(ids){
     return new Promise((resolve, reject) => {
-        spotifyApi.addTracksToPlaylist(playlistID, ids)
+        spotifyApi.addTracksToPlaylist(config.PLAYLIST_ID, ids)
         .then(data => {
             console.log('Added tracks to playlist!');
             resolve();
@@ -99,7 +99,7 @@ function stringFromTrackInfo(trackInfo){
 
 function getInfoForSongs(ids){
     return new Promise((resolve, reject) => {
-        spotifyApi.getPlaylist(playlistID)
+        spotifyApi.getPlaylist(config.PLAYLIST_ID)
             .then((data) => {
                 //console.log('Some information about this playlist', data.body);
                 const songNames = [];
