@@ -122,8 +122,6 @@ function getInfoForSongs(ids){
             for(const id of ids){
                 const foundTrack = playlistTracks.find(track => track.uri == id);
                 if(foundTrack){
-                    console.log("HOLY SHIT SHIT SHIT SHIT");
-                    console.log(id);
                     songNames.push({id: id, name: stringFromTrackInfo(foundTrack)});
                 }
             }
