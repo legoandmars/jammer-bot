@@ -97,25 +97,40 @@ function stringFromTrackInfo(trackInfo){
     return trackInfo.name + " - " + trackInfo.artists.map((data) => {return data.name}).join(", ");
 }
 
+function getFullPlaylistInfo(previousTracks = [], offset = 0){
+    return new Promise((resolve, reject) => {
+        spotifyApi.getPlaylistTracks(config.PLAYLIST_ID, {length:100, offset:offset})
+        .then((data) => {
+            // console.log(data.body);
+            const songItems = data.body.items.map((track) => {return track.track}).concat(previousTracks);
+            if(offset + 100 >= data.body.total){
+                resolve(songItems);
+            }else{
+                resolve(getFullPlaylistInfo(songItems, offset + 100));
+            }
+        }).catch((err) => {
+            reject(err);
+        })
+    });
+}
+
 function getInfoForSongs(ids){
     return new Promise((resolve, reject) => {
-        spotifyApi.getPlaylist(config.PLAYLIST_ID)
-            .then((data) => {
-                //console.log('Some information about this playlist', data.body);
-                const songNames = [];
-                for(const id of ids){
-                    for (const trackitem of data.body.tracks.items) {
-                        if(trackitem.track.id == id.split("spotify:track:")[1]){
-                            songNames.push(stringFromTrackInfo(trackitem.track));
-                            break;
-                        }
-                    }    
+        const songNames = [];
+
+        getFullPlaylistInfo(config.PLAYLIST_ID).then(playlistTracks => {
+            for(const id of ids){
+                const foundTrack = playlistTracks.find(track => track.uri == id);
+                if(foundTrack){
+                    console.log("HOLY SHIT SHIT SHIT SHIT");
+                    console.log(id);
+                    songNames.push({id: id, name: stringFromTrackInfo(foundTrack)});
                 }
-                resolve(songNames);
-            }, (err) => {
-                console.log('Something went wrong!', err);
-                reject();
-        });
+            }
+            resolve(songNames);
+        }).catch(err => {
+            reject(err);
+        })
     });
 }
 

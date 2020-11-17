@@ -49,9 +49,9 @@ function parseSpotifyURLSFromString(inputString){
 
 function sendUpdateMessage(user, spotifyIDs){
     spotify.getInfoForSongs(spotifyIDs).then((nameArray) => {
-        let whichSong = ""
-        if(nameArray.length > 1) whichSong = "s";
-        const addedString = `<@${user.id}> added ${nameArray.length} song${whichSong} to the playlist:\n${nameArray.map((data) => {return `• ${data}`}).join("\n")}`
+        nameArray = nameArray.map(arrayItem => arrayItem.name);
+        if(nameArray.length < 1) return;
+        const addedString = `<@${user.id}> added ${nameArray.length} song${nameArray.length > 1 ? "s" : ""} to the playlist:\n${nameArray.map((data) => {return `• ${data}`}).join("\n")}`
         if(config.ANNOUNCEMENT_CHANNEL){
             client.channels.cache.get(config.ANNOUNCEMENT_CHANNEL).send(addedString);   
         }
@@ -64,13 +64,25 @@ client.once('ready', () => {
         if(config.IS_LOCKED_TO_CHANNEL && config.LOCK_CHANNEL && message.channel.id.toString() != config.LOCK_CHANNEL) return;
         const spotifyIDs = parseSpotifyURLSFromString(message.content);
         if(spotifyIDs.length > 0){
-            spotify.AddToPlaylist(spotifyIDs).then(() => {
-                for(const spotifyID of spotifyIDs){
-                    data.addEvent(message.author.id, spotifyID);
+            spotify.getInfoForSongs(spotifyIDs).then(nameArray => {
+                nameArray = nameArray.map(song => song.id); // get array to only ids
+                console.log(nameArray);
+                console.log(spotifyIDs);
+                nameArray = spotifyIDs.filter(song => nameArray.indexOf(song) < 0); // remove already present songs
+                if(nameArray.length < 1){
+                    message.reply(spotifyIDs.length > 1 ? 
+                    `Whoops! Those songs are already in the playlist. Try again with some different songs.` :
+                    `Whoops! That song is already in the playlist. Try again with a different song.`);
+                    return;
                 }
-                sendUpdateMessage(message.author, spotifyIDs)
-                message.reply(`Added to playlist! check it out here: https://open.spotify.com/playlist/${config.PLAYLIST_ID}`)
-            });
+                spotify.AddToPlaylist(nameArray).then(() => {
+                    for(const spotifyID of nameArray){
+                        data.addEvent(message.author.id, spotifyID);
+                    }
+                    sendUpdateMessage(message.author, nameArray)
+                    message.reply(`Added to playlist! Check it out here: <https://open.spotify.com/playlist/${config.PLAYLIST_ID}>`)
+                });    
+            })
         }
     });    
 });
