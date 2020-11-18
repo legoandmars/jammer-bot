@@ -1,0 +1,38 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Playlist {
+  id             String  @id
+  infoChannelId  String
+  inputChannelId String  @unique
+  tracks         Track[]
+}
+
+model Track {
+  songId     String
+  userId     String
+  playlist   Playlist @relation(fields: [playlistId], references: [id])
+  playlistId String
+  addedAt    DateTime @default(now())
+
+  @@id([songId, playlistId])
+}
+
+model Credentials {
+  userId       String   @id
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+}
+
+model AuthRequest {
+  id        String   @id
+  createdAt DateTime @default(now())
+  userId    String
+}

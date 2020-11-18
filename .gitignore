@@ -120,3 +120,6 @@ dist
 
 # data
 **/data.json
+
+# sqlite databases
+*.db
