@@ -1,6 +1,6 @@
 import * as crypto from "crypto";
+import { Credentials, PrismaClient } from "@prisma/client";
 import { addSeconds, differenceInMinutes } from "date-fns";
-import { PrismaClient } from "@prisma/client";
 import SpotifyClient from "spotify-web-api-node";
 import { promisify } from "util";
 
@@ -99,4 +99,21 @@ export async function refreshCredentials(
     });
 
     return { accessToken, expiresAt };
+}
+
+// Refresh Spotify credentials in place
+export async function refreshCredentialsInPlace(
+    credentials: Credentials,
+    spotify: SpotifyClient,
+    prisma: PrismaClient
+): Promise<void> {
+    const newCredentials = await refreshCredentials(
+        credentials.userId,
+        credentials.refreshToken,
+        spotify,
+        prisma
+    );
+
+    credentials.accessToken = newCredentials.accessToken;
+    credentials.expiresAt = newCredentials.expiresAt;
 }

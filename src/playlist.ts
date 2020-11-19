@@ -1,6 +1,6 @@
 import { Credentials, PrismaClient } from "@prisma/client";
 import SpotifyClient from "spotify-web-api-node";
-import { refreshCredentials } from "./auth";
+import { refreshCredentialsInPlace } from "./auth";
 
 // Register a new playlist managed by the bot
 export async function register(
@@ -11,6 +11,11 @@ export async function register(
     spotify: SpotifyClient,
     prisma: PrismaClient
 ): Promise<string> {
+    // Refresh credentials if needed
+    if (new Date() > ownerCredentials.expiresAt) {
+        await refreshCredentialsInPlace(ownerCredentials, spotify, prisma);
+    }
+
     // Make sure playlist exists
     spotify.setAccessToken(ownerCredentials.accessToken);
     const playlist = (await spotify.getPlaylist(spotifyId)).body;
@@ -48,15 +53,11 @@ export async function addTracks(
 
     // Refresh credentials if needed
     if (new Date() > playlist.ownerCredentials.expiresAt) {
-        const newCredentials = await refreshCredentials(
-            playlist.ownerCredentials.userId,
-            playlist.ownerCredentials.refreshToken,
+        await refreshCredentialsInPlace(
+            playlist.ownerCredentials,
             spotify,
             prisma
         );
-
-        playlist.ownerCredentials.accessToken = newCredentials.accessToken;
-        playlist.ownerCredentials.expiresAt = newCredentials.expiresAt;
     }
 
     // Add tracks to the Spotify playlist
