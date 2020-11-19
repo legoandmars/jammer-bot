@@ -46,7 +46,7 @@ export async function verifyRequest(
         await prisma.authRequest.delete({ where: { id }, select: {} });
 
         const minutesSinceCreation = differenceInMinutes(
-            Date.now(),
+            new Date(),
             request.createdAt
         );
         if (minutesSinceCreation < expiration) {
@@ -66,11 +66,11 @@ export async function processRequest(
     spotify: SpotifyClient,
     prisma: PrismaClient
 ): Promise<void> {
-    const data = await spotify.authorizationCodeGrant(code);
+    const data = (await spotify.authorizationCodeGrant(code)).body;
 
-    const accessToken = data.body["access_token"];
-    const refreshToken = data.body["refresh_token"];
-    const expiresAt = addSeconds(Date.now(), data.body["expires_in"] - 60); // Remove 60 seconds from the expiration time just to be safe
+    const accessToken = data["access_token"];
+    const refreshToken = data["refresh_token"];
+    const expiresAt = addSeconds(new Date(), data["expires_in"] - 60); // Remove 60 seconds from the expiration time just to be safe
 
     await prisma.credentials.create({
         data: { userId, accessToken, refreshToken, expiresAt },
@@ -84,12 +84,13 @@ export async function refreshCredentials(
     refreshToken: string,
     spotify: SpotifyClient,
     prisma: PrismaClient
-): Promise<void> {
+): Promise<{ accessToken: string; expiresAt: Date }> {
     spotify.setRefreshToken(refreshToken);
-    const data = await spotify.refreshAccessToken();
+    const data = (await spotify.refreshAccessToken()).body;
+    spotify.resetRefreshToken();
 
-    const accessToken = data.body["access_token"];
-    const expiresAt = addSeconds(Date.now(), data.body["expires_in"] - 60); // Remove 60 seconds from the expiration time just to be safe
+    const accessToken = data["access_token"];
+    const expiresAt = addSeconds(new Date(), data["expires_in"] - 60); // Remove 60 seconds from the expiration time just to be safe
 
     await prisma.credentials.update({
         where: { userId },
@@ -97,5 +98,5 @@ export async function refreshCredentials(
         select: {},
     });
 
-    spotify.resetRefreshToken();
+    return { accessToken, expiresAt };
 }

@@ -8,27 +8,30 @@ generator client {
 }
 
 model Playlist {
-  id             String  @id
-  infoChannelId  String
-  inputChannelId String  @unique
-  tracks         Track[]
+  spotifyId        String      @id
+  inputChannelId   String      @unique
+  infoChannelId    String
+  ownerCredentials Credentials @relation(fields: [ownerId], references: [userId])
+  ownerId          String
+  tracks           Track[]
 }
 
 model Track {
-  songId     String
+  spotifyId  String
   userId     String
-  playlist   Playlist @relation(fields: [playlistId], references: [id])
+  playlist   Playlist @relation(fields: [playlistId], references: [spotifyId])
   playlistId String
   addedAt    DateTime @default(now())
 
-  @@id([songId, playlistId])
+  @@id([spotifyId, playlistId])
 }
 
 model Credentials {
-  userId       String   @id
+  userId       String     @id
   accessToken  String
   refreshToken String
   expiresAt    DateTime
+  playlists    Playlist[]
 }
 
 model AuthRequest {
