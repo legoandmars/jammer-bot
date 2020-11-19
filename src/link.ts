@@ -1,11 +1,11 @@
 const spotifyLinkRegexp = /^https?:\/\/open.spotify.com\/(?<type>playlist|track)\/(?<id>[\da-z]{22})\S*$/i;
 
-interface SpotifyPlaylistLink {
+export interface SpotifyPlaylistLink {
     type: "playlist";
     playlist: string;
 }
 
-interface SpotifyTrackLink {
+export interface SpotifyTrackLink {
     type: "track";
     track: string;
 }
